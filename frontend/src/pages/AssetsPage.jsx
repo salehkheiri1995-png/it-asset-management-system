@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 
 const EMPTY = { code: '', serial_number: '', type_id: '', brand: '', model: '', cpu: '', ram: '', storage: '', os: '', mac_address: '', purchase_price: '', status: 'healthy' };
-
 const STATUS_LABELS = { healthy: { label: 'سالم', cls: 'badge-success' }, needs_repair: { label: 'نیاز به تعمیر', cls: 'badge-warning' }, broken: { label: 'خراب', cls: 'badge-danger' }, retired: { label: 'بازنشسته', cls: 'badge-gray' } };
 
 export default function AssetsPage() {
@@ -10,6 +9,7 @@ export default function AssetsPage() {
   const [types, setTypes] = useState([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [locationFilter, setLocationFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -27,9 +27,10 @@ export default function AssetsPage() {
   useEffect(() => { load(); }, []);
 
   const filtered = assets.filter(a => {
-    const matchSearch = `${a.code} ${a.brand} ${a.model}`.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = !search || `${a.code} ${a.brand || ''} ${a.model || ''} ${a.serial_number || ''}`.toLowerCase().includes(search.toLowerCase());
     const matchStatus = !statusFilter || a.status === statusFilter;
-    return matchSearch && matchStatus;
+    const matchLoc = !locationFilter || a.location_status === locationFilter;
+    return matchSearch && matchStatus && matchLoc;
   });
 
   const openAdd = () => { setEditing(null); setForm(EMPTY); setError(''); setShowModal(true); };
@@ -47,6 +48,11 @@ export default function AssetsPage() {
     } finally { setSaving(false); }
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm('آیا از حذف این تجهیز مطمئنید؟')) return;
+    try { await api.delete(`/assets/${id}`); load(); } catch { alert('خطا در حذف'); }
+  };
+
   return (
     <div>
       <div className="page-header">
@@ -56,32 +62,59 @@ export default function AssetsPage() {
 
       <div className="card-section">
         <div className="card-section-header">
-          <div className="toolbar" style={{ marginBottom: 0 }}>
-            <input className="search-input" placeholder="🔍 جستجو بر اساس کد، برند، مدل..." value={search} onChange={e => setSearch(e.target.value)} />
+          <div className="toolbar" style={{ marginBottom: 0, display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <input className="search-input" placeholder="🔍 جستجو: کد، برند، مدل، سریال..." value={search} onChange={e => setSearch(e.target.value)} />
             <select className="filter-select" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
               <option value="">همه وضعیت‌ها</option>
               {Object.entries(STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
             </select>
+            <select className="filter-select" value={locationFilter} onChange={e => setLocationFilter(e.target.value)}>
+              <option value="">همه مکان‌ها</option>
+              <option value="in_use">در استفاده</option>
+              <option value="in_storage">در انبار</option>
+            </select>
           </div>
           <button className="btn-primary-custom" onClick={openAdd}>➕ افزودن تجهیز</button>
         </div>
+
         <div className="card-section-body" style={{ padding: 0 }}>
           {loading ? <div className="empty-state"><div className="spinner"></div></div>
           : filtered.length === 0 ? <div className="empty-state"><div className="empty-state-icon">💾</div><h4>تجهیزی یافت نشد</h4></div>
           : (
             <div className="table-responsive">
               <table className="data-table">
-                <thead><tr><th>کد</th><th>نوع</th><th>برند / مدل</th><th>سریال</th><th>RAM</th><th>وضعیت</th><th>عملیات</th></tr></thead>
+                <thead>
+                  <tr>
+                    <th>کد</th>
+                    <th>نوع</th>
+                    <th>برند / مدل</th>
+                    <th>دارنده فعلی</th>
+                    <th>واحد</th>
+                    <th>مکان</th>
+                    <th>وضعیت</th>
+                    <th>عملیات</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {filtered.map(a => (
                     <tr key={a.id}>
-                      <td><code>{a.code}</code></td>
-                      <td>{types.find(t => t.id === a.type_id)?.name || '-'}</td>
+                      <td><code>{a.code}</code>{a.serial_number && <div><small style={{ color: 'var(--color-text-muted)' }}>S/N: {a.serial_number}</small></div>}</td>
+                      <td>{a.asset_type?.name || types.find(t => t.id === a.type_id)?.name || '-'}</td>
                       <td>{[a.brand, a.model].filter(Boolean).join(' / ') || '-'}</td>
-                      <td>{a.serial_number || '-'}</td>
-                      <td>{a.ram || '-'}</td>
+                      <td>{a.current_holder ? `${a.current_holder.first_name} ${a.current_holder.last_name}` : <span style={{ color: 'var(--color-text-faint)' }}>—</span>}</td>
+                      <td>{a.current_holder?.department?.name || <span style={{ color: 'var(--color-text-faint)' }}>—</span>}</td>
+                      <td>
+                        <span className={`badge ${a.location_status === 'in_use' ? 'badge-success' : 'badge-gray'}`}>
+                          {a.location_status === 'in_use' ? 'در استفاده' : 'انبار'}
+                        </span>
+                      </td>
                       <td><span className={`badge ${STATUS_LABELS[a.status]?.cls || 'badge-gray'}`}>{STATUS_LABELS[a.status]?.label || a.status}</span></td>
-                      <td><div style={{ display: 'flex', gap: '0.375rem' }}><button className="btn-edit-custom" onClick={() => openEdit(a)}>✏️</button></div></td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '0.375rem' }}>
+                          <button className="btn-edit-custom" onClick={() => openEdit(a)}>✏️</button>
+                          <button className="btn-delete-custom" onClick={() => handleDelete(a.id)}>🗑️</button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -103,61 +136,62 @@ export default function AssetsPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <div className="form-group">
                   <label className="form-label">کد شناسایی *</label>
-                  <input className="form-control" value={form.code} onChange={e => setForm({...form, code: e.target.value})} required disabled={!!editing} />
+                  <input className="form-control" value={form.code} onChange={e => setForm({ ...form, code: e.target.value })} required disabled={!!editing} />
                 </div>
                 <div className="form-group">
                   <label className="form-label">نوع تجهیز *</label>
-                  <select className="form-control" value={form.type_id} onChange={e => setForm({...form, type_id: e.target.value})} required>
+                  <select className="form-control" value={form.type_id} onChange={e => setForm({ ...form, type_id: e.target.value })} required>
                     <option value="">-- انتخاب کنید --</option>
                     {types.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                   </select>
+                  {types.length === 0 && <small style={{ color: 'var(--color-warning)' }}>ابتدا نوع تجهیز را در تنظیمات تعریف کنید.</small>}
+                </div>
+                <div className="form-group">
+                  <label className="form-label">سریال نامبر</label>
+                  <input className="form-control" value={form.serial_number} onChange={e => setForm({ ...form, serial_number: e.target.value })} />
                 </div>
                 <div className="form-group">
                   <label className="form-label">برند</label>
-                  <input className="form-control" value={form.brand} onChange={e => setForm({...form, brand: e.target.value})} />
+                  <input className="form-control" value={form.brand} onChange={e => setForm({ ...form, brand: e.target.value })} />
                 </div>
                 <div className="form-group">
                   <label className="form-label">مدل</label>
-                  <input className="form-control" value={form.model} onChange={e => setForm({...form, model: e.target.value})} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">شماره سریال</label>
-                  <input className="form-control" value={form.serial_number} onChange={e => setForm({...form, serial_number: e.target.value})} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">RAM</label>
-                  <input className="form-control" value={form.ram} onChange={e => setForm({...form, ram: e.target.value})} placeholder="مثال: 16GB" />
+                  <input className="form-control" value={form.model} onChange={e => setForm({ ...form, model: e.target.value })} />
                 </div>
                 <div className="form-group">
                   <label className="form-label">CPU</label>
-                  <input className="form-control" value={form.cpu} onChange={e => setForm({...form, cpu: e.target.value})} />
+                  <input className="form-control" value={form.cpu} onChange={e => setForm({ ...form, cpu: e.target.value })} />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">هارد</label>
-                  <input className="form-control" value={form.storage} onChange={e => setForm({...form, storage: e.target.value})} placeholder="مثال: 512GB SSD" />
+                  <label className="form-label">RAM</label>
+                  <input className="form-control" value={form.ram} onChange={e => setForm({ ...form, ram: e.target.value })} />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">سیستم‌عامل</label>
-                  <input className="form-control" value={form.os} onChange={e => setForm({...form, os: e.target.value})} />
+                  <label className="form-label">حافظه</label>
+                  <input className="form-control" value={form.storage} onChange={e => setForm({ ...form, storage: e.target.value })} />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">آدرس MAC</label>
-                  <input className="form-control" value={form.mac_address} onChange={e => setForm({...form, mac_address: e.target.value})} />
+                  <label className="form-label">سیستم عامل</label>
+                  <input className="form-control" value={form.os} onChange={e => setForm({ ...form, os: e.target.value })} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">MAC Address</label>
+                  <input className="form-control" value={form.mac_address} onChange={e => setForm({ ...form, mac_address: e.target.value })} />
                 </div>
                 <div className="form-group">
                   <label className="form-label">قیمت خرید (تومان)</label>
-                  <input className="form-control" type="number" value={form.purchase_price} onChange={e => setForm({...form, purchase_price: e.target.value})} />
+                  <input type="number" className="form-control" value={form.purchase_price} onChange={e => setForm({ ...form, purchase_price: e.target.value })} />
                 </div>
                 <div className="form-group">
                   <label className="form-label">وضعیت</label>
-                  <select className="form-control" value={form.status} onChange={e => setForm({...form, status: e.target.value})}>
+                  <select className="form-control" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
                     {Object.entries(STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                   </select>
                 </div>
               </div>
-              <div className="modal-footer">
+              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
                 <button type="button" className="btn-secondary-custom" onClick={() => setShowModal(false)}>انصراف</button>
-                <button type="submit" className="btn-primary-custom" disabled={saving}>{saving ? 'در حال ذخیره...' : '💾 ذخیره'}</button>
+                <button type="submit" className="btn-primary-custom" disabled={saving}>{saving ? 'در حال ذخیره...' : editing ? 'ذخیره تغییرات' : 'افزودن تجهیز'}</button>
               </div>
             </form>
           </div>
