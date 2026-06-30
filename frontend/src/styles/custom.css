@@ -1,0 +1,19 @@
+body {
+  background-color: #f9fafb;
+  font-family: "Vazirmatn", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+.card {
+  border-radius: 0.75rem;
+}
+
+.btn-primary {
+  background-color: #f97316;
+  border-color: #ea580c;
+}
+
+.btn-primary:hover {
+  background-color: #ea580c;
+  border-color: #c2410c;
+}

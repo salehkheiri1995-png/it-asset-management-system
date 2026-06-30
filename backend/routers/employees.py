@@ -1,0 +1,72 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from typing import List
+
+from .. import models, schemas, auth
+from ..database import get_db
+
+router = APIRouter()
+
+
+@router.get("/", response_model=List[schemas.EmployeeOut])
+def list_employees(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_active_user),
+):
+    return db.query(models.Employee).all()
+
+
+@router.post("/", response_model=schemas.EmployeeOut)
+def create_employee(
+    employee_in: schemas.EmployeeCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_active_user),
+):
+    db_employee = models.Employee(**employee_in.model_dump())
+    db.add(db_employee)
+    db.commit()
+    db.refresh(db_employee)
+    return db_employee
+
+
+@router.get("/{employee_id}", response_model=schemas.EmployeeOut)
+def get_employee(
+    employee_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_active_user),
+):
+    employee = db.query(models.Employee).get(employee_id)
+    if not employee:
+        raise HTTPException(status_code=404, detail="کارمند یافت نشد.")
+    return employee
+
+
+@router.put("/{employee_id}", response_model=schemas.EmployeeOut)
+def update_employee(
+    employee_id: int,
+    employee_in: schemas.EmployeeUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_active_user),
+):
+    employee = db.query(models.Employee).get(employee_id)
+    if not employee:
+        raise HTTPException(status_code=404, detail="کارمند یافت نشد.")
+    for k, v in employee_in.model_dump(exclude_unset=True).items():
+        setattr(employee, k, v)
+    db.commit()
+    db.refresh(employee)
+    return employee
+
+
+@router.delete("/{employee_id}")
+def delete_employee(
+    employee_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_active_user),
+):
+    employee = db.query(models.Employee).get(employee_id)
+    if not employee:
+        raise HTTPException(status_code=404, detail="کارمند یافت نشد.")
+    db.delete(employee)
+    db.commit()
+    return {"detail": "حذف شد."}

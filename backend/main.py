@@ -1,1 +1,34 @@
-ZnJvbSBmYXN0YXBpIGltcG9ydCBGYXN0QVBJCmZyb20gZmFzdGFwaS5taWRkbGV3YXJlLmNvcnMgaW1wb3J0IENPUlNNaWRkbGV3YXJlCgpmcm9tIC5yb3V0ZXJzIGltcG9ydCB1c2VycywgZW1wbG95ZWVzLCBhc3NldHMsIGFzc2lnbm1lbnRzLCBpbnNwZWN0aW9ucywgdGlja2V0cywgcmVwb3J0cwoKYXBwID0gRmFzdEFQSSh0aXRsZT0iSVQgQXNzZXQgTWFuYWdlbWVudCAmIFN1cHBvcnQgU3lzdGVtIiwgdmVyc2lvbj0iMS4wLjAiKQoKb3JpZ2lucyA9IFsKICAgICJodHRwOi8vbG9jYWxob3N0OjUxNzMiLApdCgphcHAuYWRkX21pZGRsZXdhcmUoCiAgICBDT1JTTWlkZGxld2FyZSwKICAgIGFsbG93X29yaWdpbnM9b3JpZ2lucywKICAgIGFsbG93X2NyZWRlbnRpYWxzPVRydWUsCiAgICBhbGxvd19tZXRob2RzPVsiKiJdLAogICAgYWxsb3dfaGVhZGVycz1bIioiXSwKKQoKYXBwLmluY2x1ZGVfcm91dGVyKHVzZXJzLnJvdXRlciwgcHJlZml4PSIvYXBpL3VzZXJzIiwgdGFncz1bIlVzZXJzIl0pCmFwcC5pbmNsdWRlX3JvdXRlcihlbXBsb3llZXMucm91dGVyLCBwcmVmaXg9Ii9hcGkvZW1wbG95ZWVzIiwgdGFncz1bIkVtcGxveWVlcyJdKQphcHAuaW5jbHVkZV9yb3V0ZXIoYXNzZXRzLnJvdXRlciwgcHJlZml4PSIvYXBpL2Fzc2V0cyIsIHRhZ3M9WyJBc3NldHMiXSkKYXBwLmluY2x1ZGVfcm91dGVyKGFzc2lnbm1lbnRzLnJvdXRlciwgcHJlZml4PSIvYXBpL2Fzc2lnbm1lbnRzIiwgdGFncz1bIkFzc2lnbm1lbnRzIl0pCmFwcC5pbmNsdWRlX3JvdXRlcihpbnNwZWN0aW9ucy5yb3V0ZXIsIHByZWZpeD0iL2FwaS9pbnNwZWN0aW9ucyIsIHRhZ3M9WyJJbnNwZWN0aW9ucyJdKQphcHAuaW5jbHVkZV9yb3V0ZXIodGlja2V0cy5yb3V0ZXIsIHByZWZpeD0iL2FwaS90aWNrZXRzIiwgdGFncz1bIlRpY2tldHMiXSkKYXBwLmluY2x1ZGVfcm91dGVyKHJlcG9ydHMucm91dGVyLCBwcmVmaXg9Ii9hcGkvcmVwb3J0cyIsIHRhZ3M9WyJSZXBvcnRzIl0pCgpAYXBwLmdldCgiL2FwaS9oZWFsdGgiKQphc3luYyBkZWYgaGVhbHRoX2NoZWNrKCk6CiAgICByZXR1cm4geyJzdGF0dXMiOiAib2sifQo=
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from .database import Base, engine
+from .routers import users, employees, assets, assignments, inspections, tickets, reports
+
+app = FastAPI(title="IT Asset Management & Support System", version="1.0.0")
+
+Base.metadata.create_all(bind=engine)
+
+origins = [
+    "http://localhost:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(users.router, prefix="/api/users", tags=["Users"])
+app.include_router(employees.router, prefix="/api/employees", tags=["Employees"])
+app.include_router(assets.router, prefix="/api/assets", tags=["Assets"])
+app.include_router(assignments.router, prefix="/api/assignments", tags=["Assignments"])
+app.include_router(inspections.router, prefix="/api/inspections", tags=["Inspections"])
+app.include_router(tickets.router, prefix="/api/tickets", tags=["Tickets"])
+app.include_router(reports.router, prefix="/api/reports", tags=["Reports"])
+
+
+@app.get("/api/health")
+async def health_check():
+    return {"status": "ok"}
