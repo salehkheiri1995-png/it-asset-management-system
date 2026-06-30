@@ -1,0 +1,151 @@
+/* ─── DataTable toolbar ──────────────────────────────── */
+.datatable-wrapper { }
+.datatable-toolbar {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .875rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.search-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: .375rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: .35rem .75rem;
+  flex: 1;
+  min-width: 180px;
+  max-width: 340px;
+  transition: var(--transition);
+}
+.search-input-wrap:focus-within {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(249,115,22,.12);
+}
+.search-icon { font-size: .875rem; color: var(--text-muted); }
+.search-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: .875rem;
+  color: var(--text);
+  flex: 1;
+  font-family: inherit;
+}
+.search-clear {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0 .15rem;
+  transition: color .15s;
+}
+.search-clear:hover { color: var(--danger); }
+.datatable-count { font-size: .8rem; color: var(--text-muted); white-space: nowrap; }
+
+/* ─── Sortable column headers ────────────────────────── */
+.sortable-th { cursor: pointer; user-select: none; }
+.sortable-th:hover { color: var(--orange); }
+.sort-arrow { font-size: .75rem; color: var(--orange); }
+
+/* ─── Table empty state ──────────────────────────────── */
+.table-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3rem 1rem;
+  color: var(--text-muted);
+  text-align: center;
+  gap: .75rem;
+}
+.table-empty-icon { font-size: 2.5rem; }
+.table-empty p { font-size: .9rem; }
+
+/* ─── Pagination ─────────────────────────────────────── */
+.datatable-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .75rem;
+  padding: .875rem;
+  border-top: 1px solid var(--border);
+}
+.page-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: .35rem .875rem;
+  border-radius: var(--radius-sm);
+  font-size: .85rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: var(--transition);
+}
+.page-btn:hover:not(:disabled) { background: var(--orange-light); color: var(--orange); border-color: var(--orange-mid); }
+.page-btn:disabled { opacity: .4; cursor: not-allowed; }
+.page-info { font-size: .8rem; color: var(--text-muted); }
+
+/* ─── Skeleton loaders ───────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface-offset, #f3f0ec) 25%,
+    var(--surface-dynamic, #e6e4df) 50%,
+    var(--surface-offset, #f3f0ec) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+  display: block;
+}
+.skeleton-text { height: 1em; margin-bottom: .375rem; width: 100%; }
+.skeleton-text:last-child { width: 60%; }
+.skeleton-heading { height: 1.5em; width: 40%; margin-bottom: 1rem; }
+.skeleton-avatar { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
+}
+
+/* ─── Empty state component ──────────────────────────── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--text-muted);
+}
+.empty-state-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: .7;
+}
+.empty-state h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: .375rem;
+}
+.empty-state p {
+  font-size: .875rem;
+  max-width: 32ch;
+  margin-bottom: 1.25rem;
+}
+
+/* ─── Clickable stat card ────────────────────────────── */
+.clickable-card {
+  cursor: pointer;
+}
+.clickable-card:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 3px;
+}

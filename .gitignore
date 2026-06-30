@@ -3,23 +3,44 @@ __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
-*.log
-*.sqlite3
-.env
+.Python
 venv/
 .venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
 
-# VS Code / IDE
+# Database (never commit the actual database file)
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment variables (NEVER commit secrets)
+.env
+.env.local
+.env.production
+.env.staging
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# IDE
 .vscode/
 .idea/
-
-# Node / React
-node_modules/
-npm-debug.log*
-yarn.lock
-pnpm-lock.yaml
-frontend/dist/
+*.swp
+*.swo
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Docker
+.dockerignore
