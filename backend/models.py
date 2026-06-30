@@ -144,6 +144,7 @@ class Inspection(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     asset_id = Column(Integer, ForeignKey("assets.id"), nullable=True)
+    # inspector / responsible employee
     employee_id = Column(Integer, ForeignKey("employees.id"), nullable=True)
     type = Column(Enum(InspectionType), nullable=False)
     scheduled_at = Column(DateTime, nullable=False)
@@ -154,8 +155,18 @@ class Inspection(Base):
     report_file_path = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
+    # custody tracking ─────────────────────────────────────────────
+    # who handed the device over for inspection
+    received_from_employee_id = Column(Integer, ForeignKey("employees.id"), nullable=True)
+    # who the device was returned / delivered to after inspection
+    delivered_to_employee_id = Column(Integer, ForeignKey("employees.id"), nullable=True)
+    # where the asset ended up: 'in_use' | 'in_storage' | 'repair'
+    location_after = Column(String(50), nullable=True)
+
     asset = relationship("Asset", back_populates="inspections")
-    employee = relationship("Employee")
+    inspector_employee = relationship("Employee", foreign_keys=[employee_id])
+    received_from = relationship("Employee", foreign_keys=[received_from_employee_id])
+    delivered_to = relationship("Employee", foreign_keys=[delivered_to_employee_id])
 
 
 class TicketPriority(str, enum.Enum):
