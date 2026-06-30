@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.log
+*.sqlite3
+.env
+venv/
+.venv/
+
+# VS Code / IDE
+.vscode/
+.idea/
+
+# Node / React
+node_modules/
+npm-debug.log*
+yarn.lock
+pnpm-lock.yaml
+frontend/dist/
+
+# OS
+.DS_Store
+Thumbs.db
