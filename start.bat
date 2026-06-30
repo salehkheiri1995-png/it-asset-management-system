@@ -9,9 +9,10 @@ echo ============================================
 echo.
 
 REM --- Start Backend (FastAPI) ---
+REM Must run from project root so relative imports (from .database) work correctly
 echo [1/2] Starting Backend (FastAPI)...
-cd /d "%PROJECT_DIR%\backend"
-start "Backend - FastAPI" cmd /k "uvicorn main:app --reload --host 0.0.0.0 --port 8000"
+cd /d "%PROJECT_DIR%"
+start "Backend - FastAPI" cmd /k "uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000"
 
 REM Small delay before starting frontend
 timeout /t 2 /nobreak >nul
@@ -26,6 +27,7 @@ echo ============================================
 echo   Both services are starting...
 echo   Backend:  http://localhost:8000
 echo   Frontend: http://localhost:5173
+echo   API Docs: http://localhost:8000/docs
 echo ============================================
 echo.
 pause
