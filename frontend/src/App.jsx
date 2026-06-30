@@ -5,6 +5,7 @@ import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import EmployeesPage from './pages/EmployeesPage';
+import EmployeeProfilePage from './pages/EmployeeProfilePage';
 import AssetsPage from './pages/AssetsPage';
 import TicketsPage from './pages/TicketsPage';
 import InspectionsPage from './pages/InspectionsPage';
@@ -27,6 +28,7 @@ function App() {
           <Route path="/" element={<LoginPage />} />
           <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
           <Route path="/employees" element={<PrivateRoute><EmployeesPage /></PrivateRoute>} />
+          <Route path="/employees/:id" element={<PrivateRoute><EmployeeProfilePage /></PrivateRoute>} />
           <Route path="/assets" element={<PrivateRoute><AssetsPage /></PrivateRoute>} />
           <Route path="/assignments" element={<PrivateRoute><AssignmentsPage /></PrivateRoute>} />
           <Route path="/inspections" element={<PrivateRoute><InspectionsPage /></PrivateRoute>} />
