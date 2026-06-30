@@ -10,6 +10,7 @@ const navItems = [
   { path: '/inspections', icon: '🔍', label: 'بازرسی‌ها' },
   { path: '/tickets', icon: '🎫', label: 'تیکت‌های پشتیبانی' },
   { path: '/reports', icon: '📈', label: 'گزارش‌ها' },
+  { path: '/settings', icon: '⚙️', label: 'تنظیمات' },
 ];
 
 export default function Layout({ children }) {
@@ -33,7 +34,7 @@ export default function Layout({ children }) {
             {sidebarOpen && <span className="logo-text">سامانه IT</span>}
           </div>
           <button className="sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
-            {sidebarOpen ? '◀' : '▶'}
+            {sidebarOpen ? '◄' : '►'}
           </button>
         </div>
 
