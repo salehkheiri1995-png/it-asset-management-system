@@ -95,6 +95,7 @@ class EmployeeUpdate(BaseModel):
 
 class EmployeeOut(EmployeeBase):
     id: int
+    department: Optional[DepartmentOut] = None
 
     class Config:
         from_attributes = True
@@ -116,6 +117,57 @@ class AssetTypeOut(AssetTypeBase):
         from_attributes = True
 
 
+# ── mini schemas for nested use (avoid circular refs) ────────────────────────
+class EmployeeMini(BaseModel):
+    id: int
+    first_name: str
+    last_name: str
+    personnel_code: str
+    department: Optional[DepartmentOut] = None
+    building: Optional[str] = None
+    floor: Optional[str] = None
+    room: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class AssetMini(BaseModel):
+    id: int
+    code: str
+    brand: Optional[str] = None
+    model: Optional[str] = None
+    status: AssetStatus
+    asset_type: Optional[AssetTypeOut] = None
+
+    class Config:
+        from_attributes = True
+
+
+# ── Assignment ───────────────────────────────────────────────────────────────
+class AssignmentBase(BaseModel):
+    asset_id: int
+    employee_id: int
+    expected_return_date: Optional[datetime] = None
+
+
+class AssignmentCreate(AssignmentBase):
+    pass
+
+
+class AssignmentOut(AssignmentBase):
+    id: int
+    assigned_at: datetime
+    returned_at: Optional[datetime] = None
+    status: str
+    asset: Optional[AssetMini] = None
+    employee: Optional[EmployeeMini] = None
+
+    class Config:
+        from_attributes = True
+
+
+# ── Asset ────────────────────────────────────────────────────────────────────
 class AssetBase(BaseModel):
     code: str
     serial_number: Optional[str] = None
@@ -153,37 +205,24 @@ class AssetUpdate(BaseModel):
 
 class AssetOut(AssetBase):
     id: int
+    asset_type: Optional[AssetTypeOut] = None
+    # current holder — populated from active assignment
+    current_holder: Optional[EmployeeMini] = None
+    # location: 'in_use' | 'in_storage'
+    location_status: str = "in_storage"
 
     class Config:
         from_attributes = True
 
 
-class AssignmentBase(BaseModel):
-    asset_id: int
-    employee_id: int
-    expected_return_date: Optional[datetime] = None
-
-
-class AssignmentCreate(AssignmentBase):
-    pass
-
-
-class AssignmentOut(AssignmentBase):
-    id: int
-    assigned_at: datetime
-    returned_at: Optional[datetime] = None
-    status: str
-
-    class Config:
-        from_attributes = True
-
-
+# ── Inspection ───────────────────────────────────────────────────────────────
 class InspectionBase(BaseModel):
     asset_id: Optional[int] = None
     employee_id: Optional[int] = None
     type: InspectionType
     scheduled_at: datetime
     due_at: datetime
+    notes: Optional[str] = None
 
 
 class InspectionCreate(InspectionBase):
@@ -191,21 +230,37 @@ class InspectionCreate(InspectionBase):
 
 
 class InspectionUpdate(BaseModel):
-    completed_at: Optional[datetime] = None
     result: Optional[InspectionResult] = None
     notes: Optional[str] = None
+    completed_at: Optional[datetime] = None
+    # custody tracking
+    received_from_employee_id: Optional[int] = None
+    delivered_to_employee_id: Optional[int] = None
+    location_after: Optional[str] = None   # 'in_use' | 'in_storage' | 'repair'
 
 
 class InspectionOut(InspectionBase):
     id: int
     completed_at: Optional[datetime] = None
     result: Optional[InspectionResult] = None
-    notes: Optional[str] = None
+    report_file_path: Optional[str] = None
+    # enriched nested
+    asset: Optional[AssetMini] = None
+    inspector_employee: Optional[EmployeeMini] = None
+    # custody
+    received_from_employee_id: Optional[int] = None
+    delivered_to_employee_id: Optional[int] = None
+    location_after: Optional[str] = None
+    received_from: Optional[EmployeeMini] = None
+    delivered_to: Optional[EmployeeMini] = None
+    # current holder of the asset at inspection time
+    current_holder: Optional[EmployeeMini] = None
 
     class Config:
         from_attributes = True
 
 
+# ── Ticket ───────────────────────────────────────────────────────────────────
 class TicketBase(BaseModel):
     title: str
     description: str
@@ -231,11 +286,13 @@ class TicketOut(TicketBase):
     created_at: datetime
     updated_at: datetime
     closed_at: Optional[datetime] = None
+    asset: Optional[AssetMini] = None
 
     class Config:
         from_attributes = True
 
 
+# ── Dashboard ────────────────────────────────────────────────────────────────
 class DashboardStats(BaseModel):
     total_assets: int
     assigned_assets: int
