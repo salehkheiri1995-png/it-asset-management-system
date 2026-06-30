@@ -10,6 +10,7 @@ import TicketsPage from './pages/TicketsPage';
 import InspectionsPage from './pages/InspectionsPage';
 import AssignmentsPage from './pages/AssignmentsPage';
 import ReportsPage from './pages/ReportsPage';
+import DepartmentsPage from './pages/DepartmentsPage';
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -31,6 +32,7 @@ function App() {
           <Route path="/inspections" element={<PrivateRoute><InspectionsPage /></PrivateRoute>} />
           <Route path="/tickets" element={<PrivateRoute><TicketsPage /></PrivateRoute>} />
           <Route path="/reports" element={<PrivateRoute><ReportsPage /></PrivateRoute>} />
+          <Route path="/settings" element={<PrivateRoute><DepartmentsPage /></PrivateRoute>} />
         </Routes>
       </Router>
     </AuthProvider>
